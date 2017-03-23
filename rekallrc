@@ -1,0 +1,4 @@
+cache_dir: .rekall_cache
+notebook_dir: /home/nonroot/
+profile_path:
+  - /rekall/
