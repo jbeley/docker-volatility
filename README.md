@@ -1,0 +1,1 @@
+docker run --rm -it -v /data/mem/:/data/ -v /home/jbeley/Sources/rekall-profiles:/rekall  testrekall rekal -f /data/mmcurdy/Infected.vmem
