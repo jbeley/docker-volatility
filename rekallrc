@@ -1,4 +1,0 @@
-cache_dir: .rekall_cache
-notebook_dir: /root
-profile_path:
-  - /rekall-profiles
