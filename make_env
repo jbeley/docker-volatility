@@ -1,1 +1,1 @@
-VOLUMES=-v /tmp:/data
+VOLUMES=-v /tmp:/output -v ~/Downloads:/data

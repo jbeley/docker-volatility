@@ -19,80 +19,97 @@
 # Then connect to http://localhost:8000 using a web browser from your host.
 #
 
-FROM python:2.7
+FROM python:2.7-alpine3.8
 MAINTAINER @jbeley
 
+ENV VOL_VERSION 2.6.1
+ENV PIP_NO_CACHE_DIR off
+ENV PIP_DISABLE_PIP_VERSION_CHECK on
 USER root
 
-RUN apt-get update && apt-get install -y \
-        unzip
-#    git \
-#    gcc \
-#    python-dev \
-#    python-pip \
-#    curl \
-#    libtool \
-#    autoconf \
-#    python-socks \
-#    python-numpy \
-#    python-scipy \
-#    bison \
-#    byacc \
-#    python-m2crypto \
-#    python-levenshtein \
-#    libffi-dev \
-#    libssl-dev \
-#    libimage-exiftool-perl \
-#    libfuzzy-dev \
-#    vim \
-#    supervisor
-#
-#
-#
-#RUN pip install -q distorm3 \
-#    gevent-websocket \
-#    flask-sockets \
-#    codegen \
-#    acora \
-#    pyelftools \
-#    pycrypto
-#
-#RUN curl -SL "https://github.com/plusvic/yara/archive/v3.4.0.tar.gz" | tar -xzC . && \
-# cd yara-3.4.0 && \
-#  ./bootstrap.sh && \
-#  ./configure && \
-#  make && \
-#  make install && \
-#  cd yara-python/ && \
-#  python setup.py build && \
-#  python setup.py install && \
-#  cd ../.. && \
-#  rm -rf yara-3.4.0 && \
-#  ldconfig
-#
-#RUN apt-get -y -q install libncurses-dev
-#
-RUN   pip install rekall
+RUN apk add --no-cache ca-certificates zlib py-pillow py-crypto py-lxml py-setuptools libxslt-dev openssl less
+RUN apk add --no-cache -t .build-deps \
+  openssl-dev \
+  python-dev \
+  build-base \
+  zlib-dev \
+  libc-dev \
+  jpeg-dev \
+  py-pip \
+  mercurial \
+  autoconf \
+  automake \
+  libtool \
+  libmagic \
+  git \
+  flex \
+  && pip install --upgrade pip wheel \
+  && pip install \
+  simplejson \
+  python-Levenshtein \
+  M2Crypto \
+  construct==2.5.5-reupload \
+  ctypeslib2 \
+  openpyxl \
+  haystack==0.36 \
+  distorm3 \
+  colorama \
+  ipython \
+  pycoin \
+  pytz \
+  pysocks \
+  requests \
+  pycrypto \
+  && cd /tmp \
+  && hg clone https://bitbucket.org/jmichel/dpapick \
+  && cd /tmp/dpapick \
+  && python setup.py install \
+  && cd /tmp \
+  && git clone --recursive https://github.com/volatilityfoundation/volatility.git \
+  && cd volatility \
+  && python setup.py build install \
+  && mkdir /plugins \
+  && cd /plugins \
+  && git clone https://github.com/volatilityfoundation/community.git \
+  && cd community \
+  && rm -rf /plugins/community/AlexanderTarasenko \
+  && rm -rf /plugins/community/MarcinUlikowski \
+  && mv /tmp/volatility/contrib/plugins contrib \
+  && cd /tmp \
+  && git clone --recursive --branch v0.2.2 https://github.com/mandiant/ioc_writer.git \
+  && cd ioc_writer \
+  && python setup.py install
 
-RUN wget -O /tmp/master.zip https://github.com/google/rekall-profiles/archive/master.zip \
-    && unzip -d /tmp/ /tmp/master.zip \
-    && mv /tmp/rekall-profiles-master/v1.0 /rekall-profiles
+  # goes after cd community
+  #&& git reset --hard 29b07e7223f55e3256e3faee7b712030676ecdec \
+RUN cd /tmp/ && \
+       git clone --recursive https://github.com/VirusTotal/yara.git && \
+       cd /tmp/yara && \
+       ./bootstrap.sh && \
+        sync && \
+       ./configure --prefix=/usr  && \
+        make clean all install && \
+        pip install --upgrade yara-python
+
+RUN cd /plugins/community/YingLi \
+  && touch __init__.py \
+  && cd /plugins/community/StanislasLejay/linux \
+  && touch __init__.py \
+  && cd /plugins/community/DatQuoc \
+  && touch __init__.py \
+  && cd /plugins/community/DimaPshoul \
+  && sed -i 's/import volatility.plugins.malware.callstacks as/import/' malthfind.py
+
+RUN mkdir /plugins/cobalt && \
+        wget -O /plugins/cobalt/cobaltstrikescan.py  https://raw.githubusercontent.com/JPCERTCC/aa-tools/master/cobaltstrikescan.py
+
+RUN git clone https://github.com/JPCERTCC/MalConfScan /plugins/malconfscan/ && \
+        pip install -r /plugins/malconfscan/requirements.txt
+
+RUN  rm -rf /tmp/* \
+  && apk del --purge .build-deps
 
 
-RUN   apt-get remove -y --purge git automake libtool byacc && \
-  apt-get autoremove -y --purge && \
-  apt-get clean -y && \
-  rm -rf /var/lib/apt/lists/* /root/.cache /tmp/master.zip
+VOLUME ["/data"]
+VOLUME ["/plugins"]
 
-#RUN groupadd -r nonroot && \
-#  useradd -r -g nonroot -d /home/nonroot -s /sbin/nologin -c "Nonroot User" nonroot && \
-#  mkdir /home/nonroot && \
-#  chown -R nonroot:nonroot /home/nonroot
-#
-#USER nonroot
-#ENV HOME /home/nonroot
-#ENV USER nonroot
-#USER root
-#WORKDIR /home/nonroot
-ADD rekallrc /root/.rekallrc
-#RUN chown nonroot /home/nonroot/.rekallrc
