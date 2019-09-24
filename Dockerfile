@@ -21,8 +21,6 @@
 
 FROM python:2.7-alpine3.8
 MAINTAINER @jbeley
-
-ENV VOL_VERSION 2.6.1
 ENV PIP_NO_CACHE_DIR off
 ENV PIP_DISABLE_PIP_VERSION_CHECK on
 USER root
@@ -105,6 +103,9 @@ RUN mkdir /plugins/cobalt && \
 
 RUN git clone https://github.com/JPCERTCC/MalConfScan /plugins/malconfscan/ && \
         pip install -r /plugins/malconfscan/requirements.txt
+
+RUN git clone https://github.com/Neo23x0/signature-base /yara/signature-base/
+
 
 RUN  rm -rf /tmp/* \
   && apk del --purge .build-deps
