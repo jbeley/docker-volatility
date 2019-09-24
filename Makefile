@@ -1,7 +1,7 @@
 include make_env
 
 NS ?= jbeley
-VERSION ?= latest
+VERSION ?= test
 
 IMAGE_NAME ?= volatility
 CONTAINER_NAME ?= volatility
@@ -11,6 +11,9 @@ CONTAINER_INSTANCE ?= default
 
 build: Dockerfile
 	docker build -t $(NS)/$(IMAGE_NAME):$(VERSION) -f Dockerfile .
+
+build-nocache: Dockerfile
+	docker build --no-cache -t $(NS)/$(IMAGE_NAME):$(VERSION) -f Dockerfile .
 
 hub-build: Dockerfile
 	curl -H "Content-Type: application/json" --data '{"build": true}' -X POST ${hub_url}
