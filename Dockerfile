@@ -28,7 +28,7 @@ USER root
 RUN apk add --no-cache ca-certificates zlib py-pillow py-crypto py-lxml py-setuptools libxslt-dev openssl less
 RUN apk add --no-cache -t .build-deps \
   openssl-dev \
-  python-dev \
+  python2-dev \
   build-base \
   zlib-dev \
   libc-dev \
@@ -65,19 +65,21 @@ RUN apk add --no-cache -t .build-deps \
   && cd /tmp \
   && git clone --recursive https://github.com/volatilityfoundation/volatility.git \
   && cd volatility \
-  && python setup.py build install \
-  && mkdir /plugins \
+  && python setup.py build install
+
+  RUN  mkdir /plugins \
   && cd /plugins \
   && git clone https://github.com/volatilityfoundation/community.git \
   && cd community \
   && rm -rf /plugins/community/AlexanderTarasenko \
   && rm -rf /plugins/community/MarcinUlikowski \
-  && mv /tmp/volatility/contrib/plugins contrib \
   && cd /tmp \
   && git clone --recursive --branch v0.2.2 https://github.com/mandiant/ioc_writer.git \
   && cd ioc_writer \
   && python setup.py install
 
+
+# mkdir /plugins   && cd /plugins   && git clone https://github.com/volatilityfoundation/community.git   && cd community
   # goes after cd community
   #&& git reset --hard 29b07e7223f55e3256e3faee7b712030676ecdec \
 RUN cd /tmp/ && \
@@ -103,6 +105,13 @@ RUN mkdir /plugins/cobalt && \
 
 RUN git clone https://github.com/JPCERTCC/MalConfScan /plugins/malconfscan/ && \
         pip install -r /plugins/malconfscan/requirements.txt
+
+RUN git clone https://github.com/mnemonic-no/dnscache /plugins/dnscache/ && \
+    pip install \
+        construct==2.5.5-reupload \
+        pefile \
+        pdbparse
+
 
 RUN git clone https://github.com/Neo23x0/signature-base /yara/signature-base/
 
